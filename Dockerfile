@@ -1,5 +1,5 @@
-# Stable bullseye version of debian linux
-FROM debian:bullseye
+# Stable bookworm version of debian linux
+FROM debian:bookworm
 
 # Set the home directory
 ENV HOME=/bitcoinsv
