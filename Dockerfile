@@ -2,19 +2,19 @@
 FROM debian:bullseye
 
 # Set the home directory
-ENV HOME /bitcoinsv
+ENV HOME=/bitcoinsv
 
 # Set environment variables
-ENV USER_ID 1000
-ENV GROUP_ID 1000
-ENV BSV_VERSION=1.1.0
+ENV USER_ID=1000
+ENV GROUP_ID=1000
+ENV BSV_VERSION=1.2.0
 
 # Update all operating system dependencies
 RUN groupadd -g ${GROUP_ID} bitcoinsv \
   && useradd -u ${USER_ID} -g bitcoinsv -s /bin/bash -m -d /bitcoinsv bitcoinsv \
   && set -x \
   && apt-get update -y \
-  && apt-get install -y curl gosu libatomic1 \
+  && apt-get install -y curl gosu libatomic1 nload net-tools iotop \
   && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Download the bsv node and extract
@@ -37,7 +37,7 @@ EXPOSE 8332 8333
 WORKDIR /bitcoinsv
 
 # Copy the configuration into the volume
-COPY bitcoin.conf /.bitcoin/bitcoin.conf
+COPY bitcoin.conf /bitcoinsv/.bitcoin/bitcoin.conf
 
 # Copy and set the entrypoint
 COPY entrypoint.sh /usr/local/bin/
