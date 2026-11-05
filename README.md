@@ -3,12 +3,13 @@
 
 [![last commit](https://img.shields.io/github/last-commit/mrz1836/docker-bitcoinsv.svg?style=flat&v=1)](https://github.com/mrz1836/docker-bitcoinsv/commits/master)
 [![version](https://img.shields.io/github/release-pre/mrz1836/docker-bitcoinsv.svg?style=flat&v=1)](https://github.com/mrz1836/docker-bitcoinsv/releases)
-[![BSV Version](https://img.shields.io/badge/BSV-1.1.0-blue.svg?v=1)](https://download.bitcoinsv.io/bitcoinsv/1.1.0/)
+[![BSV Version](https://img.shields.io/badge/BSV-1.2.3-blue.svg?v=1)](https://download.bitcoinsv.io/bitcoinsv/1.2.3/)
 [![Docker Version](https://img.shields.io/badge/Docker-18.0.xx-blue.svg?v=1)](https://docs.docker.com/release-notes/)
 [![Sponsor](https://img.shields.io/badge/sponsor-MrZ1836-181717.svg?logo=github&style=flat&v=1)](https://github.com/sponsors/Mrz1836)
 
 ## Table of Contents
 - [Installation](#installation)
+- [Upgrading](#upgrading)
 - [Documentation](#documentation)
 - [Maintainers](#maintainers)
 - [Credits](#credits)
@@ -44,8 +45,8 @@ git clone git@github.com:mrz1836/docker-bitcoinsv.git
 cd ~/docker-bitcoinsv
 ```
 
-**1) Create a bsvd-data volume** to persist the bsvd blockchain data, should exit immediately. 
-The bsvd-data container will store the blockchain when the node container is recreated (software upgrade, reboot, etc.):
+**1) Create a bsvd-data volume** to persist the bsvd blockchain data, should exit immediately.
+The bsvd-data container will store the blockchain when the node container is recreated (software upgrade, reboot, etc):
 ```shell script
 docker volume create --name=bsvd-data
 ```
@@ -74,10 +75,14 @@ bsv-node-image      latest              bea2961dbc29        47 seconds ago      
 **3) Run the docker image**
 ```shell script
 docker run -v bsvd-data:/bitcoinsv --name=bsvd-node-server -d \
+      --restart unless-stopped \
+      --stop-timeout 600 \
       -p 8333:8333 \
       -p 8332:8332 \
       bsv-node-image:latest
 ```
+
+Upgrading to 1.2.3 also needs a cache setting change in `bitcoin.conf`: see [UPGRADING.md](UPGRADING.md).
 
 _Check that the container exists_
 ```shell script
@@ -99,9 +104,55 @@ _Test: Is there blockchain info?_
 root@zfr2961dbc55:~# bitcoin-cli getblockchaininfo
 ```
 
+sudo docker exec -it bsvd-node-server bitcoin-cli getblockchaininfo
+
 _Test: Are there logs?_
 ```shell script
 root@zfr2961dbc55:~# tail -f ~/.bitcoin/bitcoind.log
+```
+
+<br/>
+
+## Upgrading
+
+Upgrade an existing node to a new BSV version. Blockchain data on the `bsvd-data` volume is preserved across upgrades.
+
+**1) Pull the latest source**
+```shell script
+cd ~/docker-bitcoinsv
+git pull origin master
+```
+
+**2) Stop and remove the running container**
+
+Give the node time to flush its cache, or the next start replays blocks for hours.
+```shell script
+docker exec bsvd-node-server bitcoin-cli stop
+docker stop -t 600 bsvd-node-server
+docker rm bsvd-node-server
+```
+
+**3) Rebuild the image**
+```shell script
+docker build --no-cache --tag=bsv-node-image .
+```
+
+**4) Start the new container**
+```shell script
+docker run -v bsvd-data:/bitcoinsv --name=bsvd-node-server -d \
+      -p 8333:8333 \
+      -p 8332:8332 \
+      bsv-node-image:latest
+```
+
+**5) Verify the node is running**
+```shell script
+docker exec bsvd-node-server bitcoin-cli getblockchaininfo
+```
+
+_Check logs for startup errors_
+```shell script
+docker logs --tail 50 -f bsvd-node-server
 ```
 
 <br/>
@@ -134,13 +185,13 @@ tag-update           Update an existing tag to current commit (tag-update versio
 
 </details>
 
-<br/> 
+<br/>
 
 ## Maintainers
 | [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) | [<img src="https://github.com/rohenaz.png" height="50" alt="Satchmo" />](https://github.com/rohenaz) |
 |:------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------:|
 |                                [MrZ](https://github.com/mrz1836)                                 |                                [Satchmo](https://github.com/rohenaz)                                 |
- 
+
 Support the development of this project and the development team 🙏
 
 [![Donate](https://img.shields.io/badge/donate-bitcoin-brightgreen.svg)](https://mrz1818.com?af=docker-bitcoinsv)

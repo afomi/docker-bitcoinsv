@@ -1,5 +1,5 @@
-# Stable bookworm version of debian linux
-FROM debian:bookworm
+# Stable trixie version of debian linux
+FROM debian:trixie
 
 # Set the home directory
 ENV HOME=/bitcoinsv
@@ -7,7 +7,7 @@ ENV HOME=/bitcoinsv
 # Set environment variables
 ENV USER_ID=1000
 ENV GROUP_ID=1000
-ENV BSV_VERSION=1.2.2
+ENV BSV_VERSION=1.2.3
 
 # Update all operating system dependencies
 RUN groupadd -g ${GROUP_ID} bitcoinsv \

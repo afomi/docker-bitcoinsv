@@ -28,6 +28,8 @@ build: ## Builds the docker image
 .PHONY: run
 run: ## Runs the docker container
 	@docker run -v bsvd-data:/bitcoinsv --name=bsvd-node-server -d \
+		--restart unless-stopped \
+		--stop-timeout 600 \
 		-p 8333:8333 \
 		-p 8332:8332 \
 		bsv-node-image:latest
